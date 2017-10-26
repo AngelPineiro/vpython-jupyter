@@ -2,3 +2,4 @@ vpnotebook
 vpython
 seaborn
 matplotlib_venn
+statsmodels
