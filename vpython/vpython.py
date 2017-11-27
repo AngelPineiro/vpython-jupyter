@@ -47,8 +47,10 @@ if _isnotebook:
     if IPython.__version__ >= '4.0.0' :
         import ipykernel
         import notebook
+        from ipykernel.comm import Comm
     else:
         import IPython.html.nbextensions
+        from IPython.kernel.comm.comm import Comm
     from IPython.display import HTML
     from IPython.display import display
     from IPython.display import Javascript
@@ -372,13 +374,14 @@ class baseObj(object):
 # and sent as a block to the browser at render times.
 
 class GlowWidget(object):    
-    def __init__(self, comm, msg): # msg is passed but not used in notebook case
+    def __init__(self): 
         global sender
         baseObj.glow = self
         if _isnotebook:
-            comm.on_msg(self.handle_msg)
-            comm.on_close(self.handle_close)
-            sender = comm.send
+            self.comm = Comm(target_name='glow')
+            self.comm.on_close(self.handle_close)
+            self.comm.on_msg(self.handle_msg)
+            sender = self.comm.send
             self.show = True
 
     ## baseObj.object_registry = {}
@@ -3019,14 +3022,12 @@ class canvas(baseObj):
         except:
             raise TypeError(obj + ' is not an object belonging to a canvas')
             
-## key events conflict with notebook command mode; not permitted for now   
+## key events conflict with notebook command mode; not permitted for now
     def handle_event(self, evt):  ## events and scene info updates
         ev = evt['event']
         if ev == 'pick':
             self.mouse.setpick( evt )
             self._waitfor = True # what pick is looking for
-        #elif ev == 'waitfor':
-        #    self._waitfor = True # what pause/waitfor is looking for
         elif ev == '_compound': # compound, text, extrusion
             obj = self._compound
             p = evt['pos']
@@ -3042,7 +3043,7 @@ class canvas(baseObj):
                 obj._size.value = list_to_vec(s)
                 obj._axis.value = obj._size._x*norm(obj._axis)
                 obj._up.value = list_to_vec(evt['up'])
-            self._waitfor = True # what compound and text and extrusion are looking for
+            self._waitfor = True # what compound and text and extrusion are looking for in _wait()
         elif ev == 'resize':
             if self.resizable and ('resize' in self._binds):
                 self.width = evt['width']
@@ -3059,7 +3060,7 @@ class canvas(baseObj):
                         a = getargspec(fct)
                         if len(a.args) > 0: fct( evt ) 
                         else: fct()
-        else:
+        else: # pause/waitfor, update_canvas
             if 'pos' in evt:
                 pos = evt['pos']
                 evt['pos'] = list_to_vec(pos)
