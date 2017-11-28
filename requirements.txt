@@ -1,5 +1,5 @@
 vpnotebook
 vpython
-seaborn
+seaborn==0.7.0
 matplotlib_venn
 statsmodels
