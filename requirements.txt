@@ -5,3 +5,5 @@ vpython
 seaborn
 matplotlib_venn
 statsmodels
+ipympl
+nodejs
